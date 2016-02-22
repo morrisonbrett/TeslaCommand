@@ -93,6 +93,7 @@ func main() {
 		// If the distance is outside the radius, that means vehicle is outside the GeoFence.  Ok to get out
 		if distance > float64(radius) {
 			ingeofence = false
+			continue
 		}
 
 		// This is to prevent the below logic, if it's already executed, no need to keep doing it
