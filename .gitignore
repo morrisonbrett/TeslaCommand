@@ -1,0 +1,10 @@
+*.o
+*.a
+*.so
+
+*.out
+*.html
+*.test
+*.prof
+*.stackdump
+*.exe
