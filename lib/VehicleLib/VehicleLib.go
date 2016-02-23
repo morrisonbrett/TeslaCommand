@@ -141,10 +141,7 @@ func GetChargeState(token string, id int, vcsr *VehicleChargeStateResponse) erro
 	}
 
 	defer resp.Body.Close()
-	//resp_body, _ := ioutil.ReadAll(resp.Body)
 
-	//fmt.Println(resp.Status)
-	//fmt.Println(string(resp_body))
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("GetChargeState response code: %d", resp.StatusCode)
 	}
@@ -186,10 +183,7 @@ func GetLocation(token string, id int, vlr *VehicleLocationResponse) error {
 	}
 
 	defer resp.Body.Close()
-	//resp_body, _ := ioutil.ReadAll(resp.Body)
 
-	//fmt.Println(resp.Status)
-	//fmt.Println(string(resp_body))
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("getLocation response code: %d", resp.StatusCode)
 	}
@@ -217,7 +211,6 @@ func TeslaLogin(clientid string, clientsecret string, email string, password str
 
 	data := url.Values{}
 	data.Add("grant_type", "password")
-	//data.Add("token_type", "bearer")
 	data.Add("client_id", clientid)
 	data.Add("client_secret", clientsecret)
 	data.Add("email", email)

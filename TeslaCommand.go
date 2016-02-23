@@ -83,7 +83,7 @@ func main() {
 		err = VehicleLib.GetLocation(li.Token, vir.Vehicles[vehicleIndex].ID, &vlr)
 		if err != nil {
 			fmt.Println(err)
-			os.Exit(1)
+			continue
 		}
 
 		distance := HaversinFormula.Distance(geoFenceLatitude, geoFenceLongitude, vlr.VehicleLocation.Latitude, vlr.VehicleLocation.Longitude)
@@ -106,7 +106,7 @@ func main() {
 		err = VehicleLib.GetChargeState(li.Token, vir.Vehicles[vehicleIndex].ID, &vcsr)
 		if err != nil {
 			fmt.Println(err)
-			os.Exit(1)
+			continue
 		}
 
 		// Check if the vehicle is stopped.
@@ -121,7 +121,7 @@ func main() {
 				err = VehicleLib.SendMail(mailServer, mailServerPort, mailServerLogin, mailServerPassword, fromAddress, toAddress, subject, body)
 				if err != nil {
 					fmt.Println(err)
-					os.Exit(1)
+					continue
 				}
 			}
 		}
