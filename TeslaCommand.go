@@ -45,7 +45,7 @@ func init() {
 	flag.StringVar(&fromAddress, "fromAddress", "", "Alert send from email")
 	flag.StringVar(&toAddress, "toAddress", "", "Alert send to email")
 	flag.IntVar(&radius, "radius", 0, "Radius in meters from center geoFence - Typically use 200")
-	flag.IntVar(&checkInterval, "checkInterval", 5, "Time in minutes between checks for geoFence")
+	flag.IntVar(&checkInterval, "checkInterval", 300, "Time in seconds between checks for geoFence")
 }
 
 func main() {
@@ -74,10 +74,10 @@ func main() {
 	// Need to set this flag for every time vehicle exits and enters GeoFence (so we don't send repeated alerts)
 	ingeofence := false
 
-	// Loop every N minutes.
-	fmt.Printf("Waiting to check vehicle %v location for %v minutes...\n", vir.Vehicles[vehicleIndex].DisplayName, checkInterval)
-	for _ = range time.Tick(time.Duration(checkInterval) * time.Minute) {
-		fmt.Printf("Checking vehicle %v location after waiting %v minutes.\n", vir.Vehicles[vehicleIndex].DisplayName, checkInterval)
+	// Loop every N seconds.
+	fmt.Printf("Waiting to check vehicle %v location for %v seconds...\n", vir.Vehicles[vehicleIndex].DisplayName, checkInterval)
+	for _ = range time.Tick(time.Duration(checkInterval) * time.Second) {
+		fmt.Printf("Checking vehicle %v location after waiting %v seconds.\n", vir.Vehicles[vehicleIndex].DisplayName, checkInterval)
 
 		var vlr VehicleLib.VehicleLocationResponse
 		err = VehicleLib.GetLocation(li.Token, vir.Vehicles[vehicleIndex].ID, &vlr)
@@ -125,6 +125,6 @@ func main() {
 				}
 			}
 		}
-		fmt.Printf("Waiting to check vehicle %v location for %v minutes...\n", vir.Vehicles[vehicleIndex].DisplayName, checkInterval)
+		fmt.Printf("Waiting to check vehicle %v location for %v seconds...\n", vir.Vehicles[vehicleIndex].DisplayName, checkInterval)
 	}
 }

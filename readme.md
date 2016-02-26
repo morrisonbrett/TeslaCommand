@@ -18,7 +18,7 @@ Install [Go][3] and [Git][4] if you don't have them.  Go can be tricky with path
 
 Below is an example run.  The long/lat is for the Tesla Hawthorne, CA Supercharger (replace with your own values):
 
-`$ go run TeslaCommand.go -checkInterval=5 -fromAddress="user@gmail.com" -geoFenceLatitude=33.921063 -geoFenceLongitude=-118.33015434 -mailServer="smtp.gmail.com" -mailServerLogin="user@gmail.com" -mailServerPassword="the-gmail-password" -mailServerPort=587 -radius=200 -teslaLoginEmail="user@gmail.com" -teslaLoginPassword="the-teslamotors-password" -toAddress="user@gmail.com" -vehicleIndex=0`
+`$ go run TeslaCommand.go -checkInterval=300 -fromAddress="user@gmail.com" -geoFenceLatitude=33.921063 -geoFenceLongitude=-118.33015434 -mailServer="smtp.gmail.com" -mailServerLogin="user@gmail.com" -mailServerPassword="the-gmail-password" -mailServerPort=587 -radius=200 -teslaLoginEmail="user@gmail.com" -teslaLoginPassword="the-teslamotors-password" -toAddress="user@gmail.com" -vehicleIndex=0`
 
 Please see the "Issues" link for a list of "TO DO" items.  It's a work in progress... :-)
 
