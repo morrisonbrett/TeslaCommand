@@ -12,8 +12,6 @@ func SendMail(mailServer string, mailServerPort int, mailServerLogin string, mai
 	var auth smtp.Auth
 	if len(mailServerLogin) > 0 {
 		auth = smtp.PlainAuth("", mailServerLogin, mailServerPassword, mailServer)
-	} else {
-		auth = nil
 	}
 
 	// Connect to the server, authenticate, set the sender and recipient, and send the email in one step.
