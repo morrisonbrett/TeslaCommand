@@ -29,6 +29,10 @@ var mailServerLogin string
 var mailServerPassword string
 var fromAddress string
 var toAddress string
+var twilioSID string
+var twilioToken string
+var senderPhoneNumber string
+var recipientPhoneNumber string
 var radius int
 var checkInterval int
 
@@ -44,6 +48,10 @@ func init() {
 	flag.StringVar(&mailServerPassword, "mailServerPassword", "", "SMTP Server password")
 	flag.StringVar(&fromAddress, "fromAddress", "", "Alert send from email")
 	flag.StringVar(&toAddress, "toAddress", "", "Alert send to email")
+	flag.StringVar(&twilioSID, "twilioSID", "", "Twilio SID")
+	flag.StringVar(&twilioToken, "twilioToken", "", "Twilio Token")
+	flag.StringVar(&senderPhoneNumber, "senderPhoneNumber", "", "Sender Phone Number")
+	flag.StringVar(&recipientPhoneNumber, "recipientPhoneNumber", "", "Recipient Phone Number")
 	flag.IntVar(&radius, "radius", 0, "Radius in meters from center geoFence - Typically use 200")
 	flag.IntVar(&checkInterval, "checkInterval", 300, "Time in seconds between checks for geoFence")
 }
@@ -51,7 +59,7 @@ func init() {
 func main() {
 	fmt.Printf("Num Args %d\n", len(os.Args))
 	flag.Parse()
-	if len(os.Args) != 14 {
+	if len(os.Args) != 18 {
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -116,12 +124,19 @@ func main() {
 				// Disconnected, stopped, and within the radius - send alert
 				ingeofence = true
 				subject := "Tesla Command - " + vir.Vehicles[vehicleIndex].DisplayName
-				body := fmt.Sprintf("Vehicle is within %v meters of GeoFence with a battery level of %v percent.  Please plug in.", int(distance), vcsr.VehicleChargeState.BatteryLevel)
+				body := fmt.Sprintf("Vehicle %v is within %v meters of GeoFence with a battery level of %v percent.  Please plug in.", vir.Vehicles[vehicleIndex].DisplayName, int(distance), vcsr.VehicleChargeState.BatteryLevel)
 				fmt.Println(body)
+
+				// Send mail
 				err = VehicleLib.SendMail(mailServer, mailServerPort, mailServerLogin, mailServerPassword, fromAddress, toAddress, subject, body)
 				if err != nil {
 					fmt.Println(err)
-					continue
+				}
+
+				// Send text
+				err = VehicleLib.SendText(twilioSID, twilioToken, senderPhoneNumber, recipientPhoneNumber, body)
+				if err != nil {
+					fmt.Println(err)
 				}
 			}
 		}
