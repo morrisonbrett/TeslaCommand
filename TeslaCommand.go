@@ -81,9 +81,10 @@ func main() {
 
 	// Need to set this flag for every time vehicle exits and enters GeoFence (so we don't send repeated alerts)
 	ingeofence := false
+	waitmessage := fmt.Sprintf("Waiting to check vehicle %v location for %v seconds...\n", vir.Vehicles[vehicleIndex].DisplayName, checkInterval)
 
 	// Loop every N seconds.
-	fmt.Printf("Waiting to check vehicle %v location for %v seconds...\n", vir.Vehicles[vehicleIndex].DisplayName, checkInterval)
+	fmt.Printf(waitmessage)
 	for _ = range time.Tick(time.Duration(checkInterval) * time.Second) {
 		fmt.Printf("Checking vehicle %v location after waiting %v seconds.\n", vir.Vehicles[vehicleIndex].DisplayName, checkInterval)
 
@@ -91,6 +92,7 @@ func main() {
 		err = VehicleLib.GetLocation(li.Token, vir.Vehicles[vehicleIndex].ID, &vlr)
 		if err != nil {
 			fmt.Println(err)
+			fmt.Printf(waitmessage)
 			continue
 		}
 
@@ -101,11 +103,13 @@ func main() {
 		// If the distance is outside the radius, that means vehicle is outside the GeoFence.  Ok to get out
 		if distance > float64(radius) {
 			ingeofence = false
+			fmt.Printf(waitmessage)
 			continue
 		}
 
 		// This is to prevent the below logic, if it's already executed, no need to keep doing it
 		if ingeofence == true {
+			fmt.Printf(waitmessage)
 			continue
 		}
 
@@ -114,11 +118,12 @@ func main() {
 		err = VehicleLib.GetChargeState(li.Token, vir.Vehicles[vehicleIndex].ID, &vcsr)
 		if err != nil {
 			fmt.Println(err)
+			fmt.Printf(waitmessage)
 			continue
 		}
 
 		// Check if the vehicle is stopped.
-		if vlr.VehicleLocation.Speed == 0 {
+		if (vlr.VehicleLocation.ShiftState == "" || vlr.VehicleLocation.ShiftState == "P") && vlr.VehicleLocation.Speed == 0 {
 			//Check if the vehicle is plugged in.
 			if vcsr.VehicleChargeState.ChargingState == "Disconnected" {
 				// Disconnected, stopped, and within the radius - send alert
@@ -140,6 +145,6 @@ func main() {
 				}
 			}
 		}
-		fmt.Printf("Waiting to check vehicle %v location for %v seconds...\n", vir.Vehicles[vehicleIndex].DisplayName, checkInterval)
+		fmt.Printf(waitmessage)
 	}
 }
