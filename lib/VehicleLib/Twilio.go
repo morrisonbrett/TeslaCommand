@@ -2,12 +2,13 @@ package VehicleLib
 
 import (
 	"fmt"
+	"log"
 
 	twilio "github.com/carlosdp/twiliogo"
 )
 
 // SendText ...
-func SendText(accountSID string, authToken string, senderPhoneNumber string, recipientPhoneNumber string, body string) error {
+func SendText(logger *log.Logger, accountSID string, authToken string, senderPhoneNumber string, recipientPhoneNumber string, body string) error {
 	client := twilio.NewClient(accountSID, authToken)
 
 	message, err := twilio.NewMessage(client, senderPhoneNumber, recipientPhoneNumber, twilio.Body(body))
@@ -15,7 +16,7 @@ func SendText(accountSID string, authToken string, senderPhoneNumber string, rec
 		return fmt.Errorf("sendText error: %s", err)
 	}
 
-	fmt.Printf("SendText status %v\n", message.Status)
+	logger.Printf("SendText status %v\n", message.Status)
 
 	return nil
 }

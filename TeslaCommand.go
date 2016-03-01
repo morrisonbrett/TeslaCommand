@@ -10,6 +10,8 @@ import (
 	"TeslaCommand/lib/VehicleLib"
 	"flag"
 	"fmt"
+	"io"
+	"log"
 	"os"
 	"time"
 )
@@ -57,7 +59,18 @@ func init() {
 }
 
 func main() {
-	fmt.Printf("Num Args %d\n", len(os.Args))
+	// Setup Logging
+	logFileName := fmt.Sprintf("TeslaCommand-%v.log", time.Now().Unix())
+	logf, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE, 0640)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer logf.Close()
+
+	log.SetOutput(logf)
+	logger := log.New(io.MultiWriter(logf, os.Stdout), "TeslaCommand: ", log.Lshortfile|log.LstdFlags)
+
+	logger.Printf("Num Args %d\n", len(os.Args))
 	flag.Parse()
 	if len(os.Args) != 18 {
 		flag.Usage()
@@ -65,17 +78,17 @@ func main() {
 	}
 
 	var li VehicleLib.LoginInfo
-	err := VehicleLib.TeslaLogin(clientid, clientsecret, teslaLoginEmail, teslaLoginPassword, &li)
+	err = VehicleLib.TeslaLogin(logger, clientid, clientsecret, teslaLoginEmail, teslaLoginPassword, &li)
 	if err != nil {
-		fmt.Println(err)
+		logger.Println(err)
 		os.Exit(1)
 	}
-	fmt.Println("token: " + li.Token)
+	logger.Println("token: " + li.Token)
 
 	var vir VehicleLib.VehicleInfoResponse
-	err = VehicleLib.ListVehicles(li.Token, &vir)
+	err = VehicleLib.ListVehicles(logger, li.Token, &vir)
 	if err != nil {
-		fmt.Println(err)
+		logger.Println(err)
 		os.Exit(1)
 	}
 
@@ -84,41 +97,41 @@ func main() {
 	waitmessage := fmt.Sprintf("Waiting to check vehicle %v location for %v seconds...\n", vir.Vehicles[vehicleIndex].DisplayName, checkInterval)
 
 	// Loop every N seconds.
-	fmt.Printf(waitmessage)
+	logger.Printf(waitmessage)
 	for _ = range time.Tick(time.Duration(checkInterval) * time.Second) {
-		fmt.Printf("Checking vehicle %v location after waiting %v seconds.\n", vir.Vehicles[vehicleIndex].DisplayName, checkInterval)
+		logger.Printf("Checking vehicle %v location after waiting %v seconds.\n", vir.Vehicles[vehicleIndex].DisplayName, checkInterval)
 
 		var vlr VehicleLib.VehicleLocationResponse
-		err = VehicleLib.GetLocation(li.Token, vir.Vehicles[vehicleIndex].ID, &vlr)
+		err = VehicleLib.GetLocation(logger, li.Token, vir.Vehicles[vehicleIndex].ID, &vlr)
 		if err != nil {
-			fmt.Println(err)
-			fmt.Printf(waitmessage)
+			logger.Println(err)
+			logger.Printf(waitmessage)
 			continue
 		}
 
 		distance := HaversinFormula.Distance(geoFenceLatitude, geoFenceLongitude, vlr.VehicleLocation.Latitude, vlr.VehicleLocation.Longitude)
 
-		fmt.Printf("Distance: %v\n\n", distance)
+		logger.Printf("Distance: %v\n\n", distance)
 
 		// If the distance is outside the radius, that means vehicle is outside the GeoFence.  Ok to get out
 		if distance > float64(radius) {
 			ingeofence = false
-			fmt.Printf(waitmessage)
+			logger.Printf(waitmessage)
 			continue
 		}
 
 		// This is to prevent the below logic, if it's already executed, no need to keep doing it
 		if ingeofence == true {
-			fmt.Printf(waitmessage)
+			logger.Printf(waitmessage)
 			continue
 		}
 
 		// In the GeoFence.  Get the vehicle charge state.
 		var vcsr VehicleLib.VehicleChargeStateResponse
-		err = VehicleLib.GetChargeState(li.Token, vir.Vehicles[vehicleIndex].ID, &vcsr)
+		err = VehicleLib.GetChargeState(logger, li.Token, vir.Vehicles[vehicleIndex].ID, &vcsr)
 		if err != nil {
-			fmt.Println(err)
-			fmt.Printf(waitmessage)
+			logger.Println(err)
+			logger.Printf(waitmessage)
 			continue
 		}
 
@@ -130,21 +143,21 @@ func main() {
 				ingeofence = true
 				subject := "Tesla Command - " + vir.Vehicles[vehicleIndex].DisplayName
 				body := fmt.Sprintf("Vehicle %v is within %v meters of GeoFence with a battery level of %v percent.  Please plug in.", vir.Vehicles[vehicleIndex].DisplayName, int(distance), vcsr.VehicleChargeState.BatteryLevel)
-				fmt.Println(body)
+				logger.Println(body)
 
 				// Send mail
-				err = VehicleLib.SendMail(mailServer, mailServerPort, mailServerLogin, mailServerPassword, fromAddress, toAddress, subject, body)
+				err = VehicleLib.SendMail(logger, mailServer, mailServerPort, mailServerLogin, mailServerPassword, fromAddress, toAddress, subject, body)
 				if err != nil {
-					fmt.Println(err)
+					logger.Println(err)
 				}
 
 				// Send text
-				err = VehicleLib.SendText(twilioSID, twilioToken, senderPhoneNumber, recipientPhoneNumber, body)
+				err = VehicleLib.SendText(logger, twilioSID, twilioToken, senderPhoneNumber, recipientPhoneNumber, body)
 				if err != nil {
-					fmt.Println(err)
+					logger.Println(err)
 				}
 			}
 		}
-		fmt.Printf(waitmessage)
+		logger.Printf(waitmessage)
 	}
 }

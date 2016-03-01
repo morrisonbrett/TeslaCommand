@@ -8,3 +8,5 @@
 *.prof
 *.stackdump
 *.exe
+*.log
+TeslaCommand

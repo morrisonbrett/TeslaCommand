@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -73,13 +74,13 @@ type VehicleChargeStateResponse struct {
 }
 
 // ListVehicles ...
-func ListVehicles(token string, vir *VehicleInfoResponse) error {
+func ListVehicles(logger *log.Logger, token string, vir *VehicleInfoResponse) error {
 	resource := "api/1/vehicles"
 
 	u, _ := url.ParseRequestURI(baseURL)
 	u.Path = resource
 	urlStr := fmt.Sprintf("%v", u)
-	fmt.Println(urlStr)
+	logger.Println(urlStr)
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", urlStr, nil)
@@ -105,28 +106,28 @@ func ListVehicles(token string, vir *VehicleInfoResponse) error {
 		return fmt.Errorf("listVehicles decode error: %s", err)
 	}
 
-	fmt.Printf("Count: %d\n", vir.Count)
+	logger.Printf("Count: %d\n", vir.Count)
 
 	for i := 0; i < vir.Count; i++ {
-		fmt.Printf("Name: %v\n", vir.Vehicles[i].DisplayName)
-		fmt.Printf("ID: %v\n", vir.Vehicles[i].ID)
-		fmt.Printf("VIN: %v\n", vir.Vehicles[i].Vin)
-		fmt.Printf("OptionCodes: %v\n", vir.Vehicles[i].OptionCodes)
-		fmt.Printf("State: %v\n", vir.Vehicles[i].State)
-		fmt.Println()
+		logger.Printf("Name: %v\n", vir.Vehicles[i].DisplayName)
+		logger.Printf("ID: %v\n", vir.Vehicles[i].ID)
+		logger.Printf("VIN: %v\n", vir.Vehicles[i].Vin)
+		logger.Printf("OptionCodes: %v\n", vir.Vehicles[i].OptionCodes)
+		logger.Printf("State: %v\n", vir.Vehicles[i].State)
+		logger.Println()
 	}
 
 	return nil
 }
 
 // GetChargeState ...
-func GetChargeState(token string, id int, vcsr *VehicleChargeStateResponse) error {
+func GetChargeState(logger *log.Logger, token string, id int, vcsr *VehicleChargeStateResponse) error {
 	resource := fmt.Sprintf("api/1/vehicles/%d/data_request/charge_state", id)
 
 	u, _ := url.ParseRequestURI(baseURL)
 	u.Path = resource
 	urlStr := fmt.Sprintf("%v", u)
-	fmt.Println(urlStr)
+	logger.Println(urlStr)
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", urlStr, nil)
@@ -152,23 +153,23 @@ func GetChargeState(token string, id int, vcsr *VehicleChargeStateResponse) erro
 		return fmt.Errorf("GetChargeState decode error: %s", err)
 	}
 
-	fmt.Printf("ChargingState: %v\n", vcsr.VehicleChargeState.ChargingState)
-	fmt.Printf("BatteryLevel: %v\n", vcsr.VehicleChargeState.BatteryLevel)
-	fmt.Printf("ChargeToMaxRange: %v\n", vcsr.VehicleChargeState.ChargeToMaxRange)
-	fmt.Printf("ChargePartDoorOpen: %v\n", vcsr.VehicleChargeState.ChargePartDoorOpen)
-	fmt.Println()
+	logger.Printf("ChargingState: %v\n", vcsr.VehicleChargeState.ChargingState)
+	logger.Printf("BatteryLevel: %v\n", vcsr.VehicleChargeState.BatteryLevel)
+	logger.Printf("ChargeToMaxRange: %v\n", vcsr.VehicleChargeState.ChargeToMaxRange)
+	logger.Printf("ChargePartDoorOpen: %v\n", vcsr.VehicleChargeState.ChargePartDoorOpen)
+	logger.Println()
 
 	return nil
 }
 
 // GetLocation ...
-func GetLocation(token string, id int, vlr *VehicleLocationResponse) error {
+func GetLocation(logger *log.Logger, token string, id int, vlr *VehicleLocationResponse) error {
 	resource := fmt.Sprintf("api/1/vehicles/%d/data_request/drive_state", id)
 
 	u, _ := url.ParseRequestURI(baseURL)
 	u.Path = resource
 	urlStr := fmt.Sprintf("%v", u)
-	fmt.Println(urlStr)
+	logger.Println(urlStr)
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", urlStr, nil)
@@ -194,19 +195,19 @@ func GetLocation(token string, id int, vlr *VehicleLocationResponse) error {
 		return fmt.Errorf("getLocation decode error: %s", err)
 	}
 
-	fmt.Printf("ShiftState: %v\n", vlr.VehicleLocation.ShiftState)
-	fmt.Printf("Speed: %v\n", vlr.VehicleLocation.Speed)
-	fmt.Printf("Latitude: %v\n", vlr.VehicleLocation.Latitude)
-	fmt.Printf("Longitude: %v\n", vlr.VehicleLocation.Longitude)
-	fmt.Printf("Heading: %v\n", vlr.VehicleLocation.Heading)
-	fmt.Printf("GPS Time: %v\n", vlr.VehicleLocation.GPSTime)
-	fmt.Println()
+	logger.Printf("ShiftState: %v\n", vlr.VehicleLocation.ShiftState)
+	logger.Printf("Speed: %v\n", vlr.VehicleLocation.Speed)
+	logger.Printf("Latitude: %v\n", vlr.VehicleLocation.Latitude)
+	logger.Printf("Longitude: %v\n", vlr.VehicleLocation.Longitude)
+	logger.Printf("Heading: %v\n", vlr.VehicleLocation.Heading)
+	logger.Printf("GPS Time: %v\n", vlr.VehicleLocation.GPSTime)
+	logger.Println()
 
 	return nil
 }
 
 // TeslaLogin ...
-func TeslaLogin(clientid string, clientsecret string, email string, password string, li *LoginInfo) error {
+func TeslaLogin(logger *log.Logger, clientid string, clientsecret string, email string, password string, li *LoginInfo) error {
 	resource := "/oauth/token"
 
 	data := url.Values{}
@@ -219,9 +220,9 @@ func TeslaLogin(clientid string, clientsecret string, email string, password str
 	u, _ := url.ParseRequestURI(baseURL)
 	u.Path = resource
 	urlStr := fmt.Sprintf("%v", u)
-	fmt.Println(urlStr)
-	fmt.Printf("Data: %v\n", data)
-	fmt.Printf("URL: %v\n", urlStr)
+	logger.Println(urlStr)
+	logger.Printf("Data: %v\n", data)
+	logger.Printf("URL: %v\n", urlStr)
 
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", urlStr, strings.NewReader(data.Encode()))
