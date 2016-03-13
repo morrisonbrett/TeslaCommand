@@ -37,6 +37,7 @@ var senderPhoneNumber string
 var recipientPhoneNumber string
 var radius int
 var checkInterval int
+var alertThreshold int
 
 func init() {
 	flag.StringVar(&teslaLoginEmail, "teslaLoginEmail", "", "Email for teslamotors.com account")
@@ -56,6 +57,7 @@ func init() {
 	flag.StringVar(&recipientPhoneNumber, "recipientPhoneNumber", "", "Recipient Phone Number")
 	flag.IntVar(&radius, "radius", 0, "Radius in meters from center geoFence - Typically use 200")
 	flag.IntVar(&checkInterval, "checkInterval", 300, "Time in seconds between checks for geoFence")
+	flag.IntVar(&alertThreshold, "alertThreshold", 50, "Percentage charged threshold to send alert. If charge level is above threshold, alert won't be sent")
 }
 
 func main() {
@@ -72,7 +74,7 @@ func main() {
 
 	logger.Printf("Num Args %d\n", len(os.Args))
 	flag.Parse()
-	if len(os.Args) != 18 {
+	if len(os.Args) != 19 {
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -144,6 +146,12 @@ func main() {
 				subject := "Tesla Command - " + vir.Vehicles[vehicleIndex].DisplayName
 				body := fmt.Sprintf("Vehicle %v is within %v meters of GeoFence with a battery level of %v percent.  Please plug in.", vir.Vehicles[vehicleIndex].DisplayName, int(distance), vcsr.VehicleChargeState.BatteryLevel)
 				logger.Println(body)
+
+				if vcsr.VehicleChargeState.BatteryLevel > alertThreshold {
+					logger.Printf("Battery level is above %v alert threshold. Not sending alert.", vcsr.VehicleChargeState.BatteryLevel)
+					logger.Printf(waitmessage)
+					continue
+				}
 
 				// Send mail
 				err = VehicleLib.SendMail(logger, mailServer, mailServerPort, mailServerLogin, mailServerPassword, fromAddress, toAddress, subject, body)
