@@ -85,7 +85,7 @@ func main() {
 		logger.Println(err)
 		os.Exit(1)
 	}
-	logger.Println("token: " + li.Token)
+	//logger.Println("token: " + li.Token)
 
 	var vir VehicleLib.VehicleInfoResponse
 	err = VehicleLib.ListVehicles(logger, li.Token, &vir)

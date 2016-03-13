@@ -114,7 +114,6 @@ func ListVehicles(logger *log.Logger, token string, vir *VehicleInfoResponse) er
 		logger.Printf("VIN: %v\n", vir.Vehicles[i].Vin)
 		logger.Printf("OptionCodes: %v\n", vir.Vehicles[i].OptionCodes)
 		logger.Printf("State: %v\n", vir.Vehicles[i].State)
-		logger.Println()
 	}
 
 	return nil
@@ -157,7 +156,6 @@ func GetChargeState(logger *log.Logger, token string, id int, vcsr *VehicleCharg
 	logger.Printf("BatteryLevel: %v\n", vcsr.VehicleChargeState.BatteryLevel)
 	logger.Printf("ChargeToMaxRange: %v\n", vcsr.VehicleChargeState.ChargeToMaxRange)
 	logger.Printf("ChargePartDoorOpen: %v\n", vcsr.VehicleChargeState.ChargePartDoorOpen)
-	logger.Println()
 
 	return nil
 }
@@ -201,7 +199,6 @@ func GetLocation(logger *log.Logger, token string, id int, vlr *VehicleLocationR
 	logger.Printf("Longitude: %v\n", vlr.VehicleLocation.Longitude)
 	logger.Printf("Heading: %v\n", vlr.VehicleLocation.Heading)
 	logger.Printf("GPS Time: %v\n", vlr.VehicleLocation.GPSTime)
-	logger.Println()
 
 	return nil
 }
@@ -220,9 +217,7 @@ func TeslaLogin(logger *log.Logger, clientid string, clientsecret string, email 
 	u, _ := url.ParseRequestURI(baseURL)
 	u.Path = resource
 	urlStr := fmt.Sprintf("%v", u)
-	logger.Println(urlStr)
-	logger.Printf("Data: %v\n", data)
-	logger.Printf("URL: %v\n", urlStr)
+	logger.Printf(urlStr)
 
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", urlStr, strings.NewReader(data.Encode()))
