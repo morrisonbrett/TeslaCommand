@@ -95,7 +95,7 @@ func main() {
 	}
 
 	// Need to set this flag for every time vehicle exits and enters GeoFence (so we don't send repeated alerts)
-	ingeofence := false
+	ingeofenceandstopped := false
 	waitmessage := fmt.Sprintf("Waiting to check vehicle %v location for %v seconds...\n", vir.Vehicles[vehicleIndex].DisplayName, checkInterval)
 
 	// Loop every N seconds.
@@ -117,41 +117,43 @@ func main() {
 
 		// If the distance is outside the radius, that means vehicle is outside the GeoFence.  Ok to get out
 		if distance > float64(radius) {
-			ingeofence = false
+			ingeofenceandstopped = false
 			logger.Printf(waitmessage)
 			continue
 		}
 
 		// This is to prevent the below logic, if it's already executed, no need to keep doing it
-		if ingeofence == true {
-			logger.Printf(waitmessage)
-			continue
-		}
-
-		// In the GeoFence.  Get the vehicle charge state.
-		var vcsr VehicleLib.VehicleChargeStateResponse
-		err = VehicleLib.GetChargeState(logger, li.Token, vir.Vehicles[vehicleIndex].ID, &vcsr)
-		if err != nil {
-			logger.Println(err)
+		if ingeofenceandstopped == true {
 			logger.Printf(waitmessage)
 			continue
 		}
 
 		// Check if the vehicle is stopped.
 		if (vlr.VehicleLocation.ShiftState == "" || vlr.VehicleLocation.ShiftState == "P") && vlr.VehicleLocation.Speed == 0 {
-			//Check if the vehicle is plugged in.
+			ingeofenceandstopped = true
+
+			// In the GeoFence and stopped.  Get the vehicle charge state.
+			var vcsr VehicleLib.VehicleChargeStateResponse
+			err = VehicleLib.GetChargeState(logger, li.Token, vir.Vehicles[vehicleIndex].ID, &vcsr)
+			if err != nil {
+				logger.Println(err)
+				logger.Printf(waitmessage)
+				continue
+			}
+
+			// Check if the vehicle is plugged in.
+			logger.Printf("Vehicle %v is within %v meters of GeoFence with a battery level of %v percent and charging state of %v.", vir.Vehicles[vehicleIndex].DisplayName, int(distance), vcsr.VehicleChargeState.BatteryLevel, vcsr.VehicleChargeState.ChargingState)
 			if vcsr.VehicleChargeState.ChargingState == "Disconnected" {
 				// Disconnected, stopped, and within the radius - send alert
-				ingeofence = true
-				subject := "Tesla Command - " + vir.Vehicles[vehicleIndex].DisplayName
-				body := fmt.Sprintf("Vehicle %v is within %v meters of GeoFence with a battery level of %v percent.  Please plug in.", vir.Vehicles[vehicleIndex].DisplayName, int(distance), vcsr.VehicleChargeState.BatteryLevel)
-				logger.Println(body)
-
-				if vcsr.VehicleChargeState.BatteryLevel > alertThreshold {
+				if vcsr.VehicleChargeState.BatteryLevel >= alertThreshold {
 					logger.Printf("Battery level is above %v alert threshold. Not sending alert.", vcsr.VehicleChargeState.BatteryLevel)
 					logger.Printf(waitmessage)
 					continue
 				}
+
+				subject := "Tesla Command - " + vir.Vehicles[vehicleIndex].DisplayName
+				body := fmt.Sprintf("Vehicle %v is within %v meters of GeoFence with a battery level of %v percent.  Please plug in.", vir.Vehicles[vehicleIndex].DisplayName, int(distance), vcsr.VehicleChargeState.BatteryLevel)
+				logger.Println(body)
 
 				// Send mail
 				err = VehicleLib.SendMail(logger, mailServer, mailServerPort, mailServerLogin, mailServerPassword, fromAddress, toAddress, subject, body)
