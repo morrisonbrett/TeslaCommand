@@ -1,4 +1,4 @@
-package VehicleLib
+package NotifyLib
 
 import (
 	"fmt"

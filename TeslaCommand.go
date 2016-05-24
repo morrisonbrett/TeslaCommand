@@ -7,7 +7,7 @@ package main
 
 import (
 	"TeslaCommand/lib/HaversinFormula"
-	"TeslaCommand/lib/VehicleLib"
+	"TeslaCommand/lib/NotifyLib"
 	"flag"
 	"fmt"
 	"io"
@@ -162,13 +162,13 @@ func main() {
 				logger.Println(body)
 
 				// Send mail
-				err = VehicleLib.SendMail(logger, mailServer, mailServerPort, mailServerLogin, mailServerPassword, fromAddress, toAddress, subject, body)
+				err = NotifyLib.SendMail(logger, mailServer, mailServerPort, mailServerLogin, mailServerPassword, fromAddress, toAddress, subject, body)
 				if err != nil {
 					logger.Println(err)
 				}
 
 				// Send text
-				err = VehicleLib.SendText(logger, twilioSID, twilioToken, senderPhoneNumber, recipientPhoneNumber, body)
+				err = NotifyLib.SendText(logger, twilioSID, twilioToken, senderPhoneNumber, recipientPhoneNumber, body)
 				if err != nil {
 					logger.Println(err)
 				}
