@@ -42,5 +42,6 @@ so the primary check is for charging door open. If true, the program quits. If f
 designed to be started with a scheduler (e.g.cron or Window Task Manager) at a time when vehicle **should** be charging.
 
 Note that the example command above is **out of date, even for the original**. Here is a sample command for the current version:
+
 `go run TeslaCommand.go  -alertThreshold=100 -checkInterval=3600 -fromAddress="user@gmail.com" -geoFenceLatitude=33.921063 -geoFenceLongitude=-118.33015434 -mailServer="mobile.charter.net" -mailServerLogin="user@charter.net" -mailServerPassword="the-password" -mailServerPort=25 -radius=200 -recipientPhoneNumber="7775551212" -senderPhoneNumber="7775551212" -teslaLoginEmail"user@gmail.com" -teslaLoginPassword="the-teslamotors-password" -toAddress1="user@gmail.com" -toAddress2="user@gmail.com" -twilioSID="3334445555" -twilioToken="2223334444" -vehicleIndex=0`
 
