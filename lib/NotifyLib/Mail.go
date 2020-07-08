@@ -21,6 +21,7 @@ func SendMail(logger *log.Logger, mailServer string, mailServerPort int, mailSer
 	// Connect to the server, authenticate, set the sender and recipient, and send the email in one step.
 	msg := []byte("To: " + toAddress1 + "\r\nFrom: " + fromAddress + "\r\nSubject: " + subj + "\r\n" + body + "\r\n")
 	serverPort := mailServer + ":" + strconv.Itoa(mailServerPort)
+	logger.Printf("Sending mail via server %s\n", serverPort)
 	err := smtp.SendMail(serverPort, auth, fromAddress, to, msg)
 	if err != nil {
 		return fmt.Errorf("sendMail error: %s", err)
