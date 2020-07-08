@@ -1,5 +1,5 @@
 package NotifyLib
-// Add second to address. Most mail servers require a FROM: address. This was added to the message by Lee Elson on 6/29/20
+// Most mail servers require a FROM: address. 
 
 import (
 	"fmt"
@@ -16,9 +16,9 @@ func SendMail(logger *log.Logger, mailServer string, mailServerPort int, mailSer
 		auth = smtp.PlainAuth("", mailServerLogin, mailServerPassword, mailServer)
 	}
 
-	// Connect to the server, authenticate, set the sender and recipient, and send the email in one step.
-	//LSE set up second To email address
+	//set up 2 email addresses
 	to := []string{toAddress1, toAddress2}
+	// Connect to the server, authenticate, set the sender and recipient, and send the email in one step.
 	msg := []byte("To: " + toAddress1 + "\r\nFrom: " + fromAddress + "\r\nSubject: " + subj + "\r\n" + body + "\r\n")
 	serverPort := mailServer + ":" + strconv.Itoa(mailServerPort)
 	err := smtp.SendMail(serverPort, auth, fromAddress, to, msg)
