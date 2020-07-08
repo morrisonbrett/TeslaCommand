@@ -1,5 +1,11 @@
 //
 // Brett Morrison, Februrary 2016
+// Lee Elson. June 2020 
+// Modified to add Tesla wake up call with sleep time and to have a complete TO:, FROM:, SUBJECT:,MSG
+// in the message portion of the sendmail. This is necessary for some SMTP servers. Also commented out texting portion 
+// due to subscription cost. A second to: email address has been added allowing email-to-text if desired.
+// Also modified the loop so that the program ends if it finds the charge port door open. The program has
+// been changed to loop only if the door is closed and is designed to be run at a time when the vehicle **should** be home and attached.
 //
 // A program to alert if Tesla is not plugged in at a specified GeoFence
 //
@@ -32,7 +38,8 @@ var mailServerPort int
 var mailServerLogin string
 var mailServerPassword string
 var fromAddress string
-var toAddress string
+var toAddress1 string
+var toAddress2 string
 var twilioSID string
 var twilioToken string
 var senderPhoneNumber string
@@ -52,7 +59,8 @@ func init() {
 	flag.StringVar(&mailServerLogin, "mailServerLogin", "", "SMTP Server login username")
 	flag.StringVar(&mailServerPassword, "mailServerPassword", "", "SMTP Server password")
 	flag.StringVar(&fromAddress, "fromAddress", "", "Alert send from email")
-	flag.StringVar(&toAddress, "toAddress", "", "Alert send to email")
+	flag.StringVar(&toAddress1, "toAddress1", "", "Alert send to email1") //LSE mod to add second email address
+	flag.StringVar(&toAddress2, "toAddress2", "", "Alert send to email2") //LSE mod to add second email address
 	flag.StringVar(&twilioSID, "twilioSID", "", "Twilio SID")
 	flag.StringVar(&twilioToken, "twilioToken", "", "Twilio Token")
 	flag.StringVar(&senderPhoneNumber, "senderPhoneNumber", "", "Sender Phone Number")
@@ -76,10 +84,11 @@ func main() {
 
 	logger.Printf("Num Args %d\n", len(os.Args))
 	flag.Parse()
-	if len(os.Args) != 19 {
+	if len(os.Args) != 20 {
 		flag.Usage()
 		os.Exit(1)
 	}
+
 
 	client, err := tesla.NewClient(&tesla.Auth{ClientID: clientid, ClientSecret: clientsecret, Email: teslaLoginEmail, Password: teslaLoginPassword})
 	if err != nil {
@@ -93,9 +102,16 @@ func main() {
 		logger.Println(err)
 		os.Exit(1)
 	}
-
 	vehicle := vehicles[vehicleIndex]
-
+	//Add vehicle wakeup call
+	_, err = vehicle.Wakeup()
+	if err != nil {
+		logger.Println(err)
+		os.Exit(1)
+	}
+	//Give it a chance to wake up
+	time.Sleep(60 * time.Second)   
+	
 	vehicleState, err := vehicle.VehicleState()
 	if err != nil {
 		logger.Println(err)
@@ -109,6 +125,16 @@ func main() {
 	// Loop every N seconds.
 	logger.Printf(waitmessage)
 	for _ = range time.Tick(time.Duration(checkInterval) * time.Second) {
+	
+	//Add vehicle wakeup call
+		_, err = vehicle.Wakeup()
+		if err != nil {
+			logger.Println(err)
+			os.Exit(1)
+		}
+	//Give it a chance to wake up
+	time.Sleep(60 * time.Second)   
+	
 		logger.Printf("Checking vehicle %v location after waiting %v seconds.\n", vehicleState.VehicleName, checkInterval)
 
 		driveState, err := vehicle.DriveState()
@@ -129,15 +155,16 @@ func main() {
 			continue
 		}
 
+        // The following code was removed in order to make loop do the whole test each time, including sending email if disconnected LSE
 		// This is to prevent the below logic, if it's already executed, no need to keep doing it
-		if ingeofenceandstopped == true {
-			logger.Printf(waitmessage)
-			continue
-		}
+		// LSEif ingeofenceandstopped == true {
+			// LSElogger.Printf(waitmessage)
+			// LSEcontinue
+		// LSE}
 
 		// Check if the vehicle is stopped.
 		if (driveState.ShiftState == nil || driveState.ShiftState == "P") && driveState.Speed == 0 {
-			ingeofenceandstopped = true
+			// LSEingeofenceandstopped = true
 
 			// In the GeoFence and stopped.  Get the vehicle charge state.
 			chargeState, err := vehicle.ChargeState()
@@ -149,7 +176,10 @@ func main() {
 
 			// Check if the vehicle is plugged in.
 			logger.Printf("Vehicle %v is within %v meters of GeoFence with a battery level of %v percent and charging state of %v.", vehicleState.VehicleName, int(distance), chargeState.BatteryLevel, chargeState.ChargingState)
-			if chargeState.ChargingState == "Disconnected" {
+			if chargeState.ChargingState != "Disconnected" {
+				logger.Printf("Charge state is %v. Exit", chargeState.ChargingState)
+				os.Exit(1)
+			}
 				// Disconnected, stopped, and within the radius - send alert
 				if chargeState.BatteryLevel >= alertThreshold {
 					logger.Printf("Battery level is above %v alert threshold. Not sending alert.", chargeState.BatteryLevel)
@@ -162,17 +192,17 @@ func main() {
 				logger.Println(body)
 
 				// Send mail
-				err = NotifyLib.SendMail(logger, mailServer, mailServerPort, mailServerLogin, mailServerPassword, fromAddress, toAddress, subject, body)
+				err = NotifyLib.SendMail(logger, mailServer, mailServerPort, mailServerLogin, mailServerPassword, fromAddress, toAddress1, toAddress2, subject, body)
 				if err != nil {
 					logger.Println(err)
 				}
 
 				// Send text
-				err = NotifyLib.SendText(logger, twilioSID, twilioToken, senderPhoneNumber, recipientPhoneNumber, body)
-				if err != nil {
-					logger.Println(err)
-				}
-			}
+//LSE				err = NotifyLib.SendText(logger, twilioSID, twilioToken, senderPhoneNumber, recipientPhoneNumber, body)
+//LSE				if err != nil {
+//LSE					logger.Println(err)
+//LSE				}
+
 		}
 		logger.Printf(waitmessage)
 	}
