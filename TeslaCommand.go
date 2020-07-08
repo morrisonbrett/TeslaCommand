@@ -1,7 +1,8 @@
 //
 // Brett Morrison, Februrary 2016
-// Lee Elson. June 2020 Modified to add Tesla wake up call with sleep time and to have a complete TO:, FROM:, SUBJECT:,MSG
-// in the message portion of the sendmail. This is necessary for some SMPT servers. Also commented out texting portion 
+// Lee Elson. June 2020 
+// Modified to add Tesla wake up call with sleep time and to have a complete TO:, FROM:, SUBJECT:,MSG
+// in the message portion of the sendmail. This is necessary for some SMTP servers. Also commented out texting portion 
 // due to subscription cost. A second to: email address has been added allowing email-to-text if desired.
 // Also modified the loop so that the program ends if it finds the charge port door open. The program has
 // been changed to loop only if the door is closed and is designed to be run at a time when the vehicle **should** be home and attached.
@@ -102,16 +103,15 @@ func main() {
 		os.Exit(1)
 	}
 	vehicle := vehicles[vehicleIndex]
-	//LSE. Add vehicle wakeup call
+	//Add vehicle wakeup call
 	_, err = vehicle.Wakeup()
 	if err != nil {
 		logger.Println(err)
 		os.Exit(1)
 	}
-	time.Sleep(60 * time.Second) //Give it a chance to wake up   LSE
-	// LSE
+	//Give it a chance to wake up
+	time.Sleep(60 * time.Second)   
 	
-
 	vehicleState, err := vehicle.VehicleState()
 	if err != nil {
 		logger.Println(err)
@@ -119,21 +119,21 @@ func main() {
 	}
 
 	// Need to set this flag for every time vehicle exits and enters GeoFence (so we don't send repeated alerts)
-	// LSEingeofenceandstopped := false
+	ingeofenceandstopped := false
 	waitmessage := fmt.Sprintf("Waiting to check vehicle %v location for %v seconds...\n", vehicleState.VehicleName, checkInterval)
 
 	// Loop every N seconds.
 	logger.Printf(waitmessage)
 	for _ = range time.Tick(time.Duration(checkInterval) * time.Second) {
 	
-	//LSE. Add vehicle wakeup call
-	_, err = vehicle.Wakeup()
-	if err != nil {
-		logger.Println(err)
-		os.Exit(1)
-	}
-	time.Sleep(60 * time.Second) //Give it a chance to wake up   LSE
-	// LSE
+	//Add vehicle wakeup call
+		_, err = vehicle.Wakeup()
+		if err != nil {
+			logger.Println(err)
+			os.Exit(1)
+		}
+	//Give it a chance to wake up
+	time.Sleep(60 * time.Second)   
 	
 		logger.Printf("Checking vehicle %v location after waiting %v seconds.\n", vehicleState.VehicleName, checkInterval)
 
@@ -150,7 +150,7 @@ func main() {
 
 		// If the distance is outside the radius, that means vehicle is outside the GeoFence.  Ok to get out
 		if distance > float64(radius) {
-			// LSEingeofenceandstopped = false
+			ingeofenceandstopped = false
 			logger.Printf(waitmessage)
 			continue
 		}
@@ -197,7 +197,7 @@ func main() {
 					logger.Println(err)
 				}
 
-//LSE				// Send text
+				// Send text
 //LSE				err = NotifyLib.SendText(logger, twilioSID, twilioToken, senderPhoneNumber, recipientPhoneNumber, body)
 //LSE				if err != nil {
 //LSE					logger.Println(err)
